@@ -1,0 +1,509 @@
+---
+title: "DSCI445 - Homework 2"
+author: "Reza Gouklaney"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Be sure to `set.seed(445)` at the beginning of your homework. 
+
+```{r}
+#reproducibility
+set.seed(445)
+```
+
+## Regression
+
+In this exercise you will create some simulated data and will fit simple linear regression models to it. Make sure to use `set.seed(445)` prior to starting part (a) to ensure reproducible results.
+
+(a) Using the `rnorm()` function, create a vector $x$ containing $100$ observations drawn from a $N(0, 1)$ distribution. This represents the feature, $X$.
+```{r}
+x <- rnorm(100, 0, 1)
+eps <- rnorm(100, 0, 0.25)
+y <- -1 + 0.5*x + eps
+length(y)
+```
+
+(b) Using the `rnorm()` function, create a vector  containing $100$ observations drawn from a $N(0, 0.25)$ distribution, i.e. a Normal distribution with mean zero and variance $0.25$.
+```{r}
+eps <- rnorm(100, 0, 0.25)
+
+```
+
+(c) Using `x` and `eps`, generate a vector `y` according to the model
+  
+    What is the length of the vector `y`? What are the values of $\beta_0$ and $\beta_1$ in this linear model?
+    length of y is 100 and beta0=-1 and beta1 =0.5
+    length(y)=100
+    $\beta_0$=-1
+    $\beta_1$=0.5
+    ```{r}
+y <- -1 + 0.5*x + eps
+length(y)
+```
+    
+(d) Create a scatterplot displaying the relationship between `x` and `y`. Comment on what you observe.
+
+The scatterplot shows a positive linear relationship between x and y with some random noise around the line.
+
+
+    ```{r}
+plot(x, y, main = "Scatterplot of x and y", xlab = "x", ylab = "y")
+```
+
+(e) Fit a least squares linear model to predict `y` from `x`. Comment on the model obtained. How do $\hat{\beta}_0$ and $\hat{\beta}_1$ compare to $\beta_0$ and $\beta_1$?
+
+The estimated intercept coefficient is  -0.9838296  and the estimated coefficient for x is y 0.5041202 so we can say that comparing these estimated coefficients to the true coefficients (beta0 and beta1) we can see that they are close and this suggests that the least squares linear model is able to capture the underlying relationship between x and y reasonably well. The estimated intercept is close to the true intercept of -1 and the estimated coefficient for x slope is close to the true coefficient of 0.5.
+
+
+
+    ```{r}
+lm_model <- lm(y ~ x)
+
+# Print the coefficients of the linear model
+coefficients(lm_model)
+```
+
+
+
+(f) Display the least squares line on the scatterplot obtained in (d) in blue. Draw the population regression line on the plot in red. (See `geom_abline()` for how to add a line based on intercept and slope.)
+
+    ```{r}
+library(ggplot2)
+data <- data.frame(x = x, y = y)
+beta0 <- -1
+beta1 <- 0.5
+
+# Scatterplot 
+scatterplot <- ggplot(data, aes(x, y)) +
+  geom_point() +
+  labs(title = "Scatterplot of x and y", x = "x", y = "y")
+
+# Blue LS line
+scatterplot_ls <- scatterplot +
+  geom_abline(intercept = coef(lm_model)[1], slope = coef(lm_model)[2], color = "blue")
+
+# population regression line shownt in red
+scatterplot_ls_population <- scatterplot_ls +
+  geom_abline(intercept = beta0, slope = beta1, color = "red")
+
+scatterplot_ls_population
+```
+
+(g) Now fit a polynomial regression model that predicts `y` using `x` and $\texttt{x}^2$. Is there evidence that the quadratic term improves the model fit? Explain your answer.
+
+We can evaluate the overall model fit using metrics such as the R-squared value or the residual sum of squares (RSS).
+
+If the R-squared value for the polynomial model is higher, it suggests that the quadratic term improves the model fit.
+The R-squared value for the simple linear model is approximately 0.811682 and the R-squared value for the polynomial regression model is approximately 0.8117042.
+
+Comparing the R-squared values, we can see that both models have fairly similar R-squared values. The polynomial regression model with the quadratic term (x^2) only slightly improves the model fit compared to the simple linear model But the improvement is relatively small and insignificant.
+
+
+    ```{r}
+# Fit a polynomial regression model
+poly_model <- lm(y ~ x + I(x^2))
+
+# Print the coefficients of the polynomial model
+coefficients(poly_model)
+
+
+# R-squared for the simple linear model
+r_squared_linear <- summary(lm_model)$r.squared
+
+# R-squared for the polynomial regression model
+r_squared_poly <- summary(poly_model)$r.squared
+
+# Print the R-squared values
+r_squared_linear
+r_squared_poly
+```
+
+(h) Repeat (a)-(f) after modifying the data generation process in such a way that there is *less* noise in the data. The model should remain the same. You can accomplish this by changing the variance of the normal distribution used to generate the error term in (b). Describe your results.
+
+We reduce the variance (sigma) in Step (b) to decrease the noise in the data.
+(a), (c), (d), and (e) remain the same as before.
+
+After running this code we see a scatterplot with reduced noise where the data points are closer to the regression line. The least squares line (blue) and the population regression line (red) are also closer to each other on the scatterplot.
+
+
+
+    ```{r}
+
+sigma <- 0.1  # Reduced variance for less noise
+
+epsilon <- rnorm(100, 0, sigma)
+
+# (c): Calculating y values using the true model
+y1 <- beta0 + beta1 * x + epsilon
+
+# (d): Creating a scatterplot 
+plot(x, y1, main = "Scatterplot Reduced variance", xlab = "x", ylab = "y")
+
+# (e): Fit LS linear model for prediction
+lm_model_clear <- lm(y1 ~ x)
+
+# (f): Displaying LS line and population regression line 
+abline(lm_model, col = "blue")  # BLUE LS line
+abline(a = beta0, b = beta1, col = "red")  # RED Population Reg
+
+coefficients(lm_model_clear)
+```
+
+(i) Repeat (a)-(f) after modifying the data generation process in such a way that there is *more* noise in the data. The model should remain the same. You can accomplish this by changing the variance of the normal distribution used to generate the error term  in (b). Describe your results.
+
+This time, we increased the variance (sigma) in Step (b) to decrease the noise in the data. The rest of the steps (a), (c), (d), and (e) remain the same as before.
+
+After running this code we see a scatterplot with reduced noise where the data points are far away to the regression line looking very non-linearly correlated or uncorrelated. The least squares line (blue) and the population regression line (red) are distinguishable from each other.
+
+    ```{r}
+sigma <- 2  # Increased variance for less noise
+
+# (b)
+epsilon <- rnorm(100, 0, sigma)
+
+# (c)
+y2 <- beta0 + beta1 * x + epsilon
+
+# (d)
+plot(x, y2, main = "Scatterplot Increased variance ", xlab = "x", ylab = "y")
+
+# (e)
+lm_model_noisy <- lm(y2 ~ x)
+
+#  (f)
+abline(lm_model_noisy, col = "blue")  
+abline(a = beta0, b = beta1, col = "red")  
+
+coefficients(lm_model_noisy)
+```
+
+(j) What are the confidence intervals for $\beta_0$ and $\beta_1$ based on the original data set, the noisier data set, and the less noisy data sets? Comment on your results.
+
+
+For both beta0 and beta1, the confidence intervals based on the less noisy data set are narrower compared to the original and noisier data sets. This indicates that the estimates of the coefficients are more precise and have lower uncertainty when the noise is reduced.
+The confidence intervals for beta0 and beta1 based on the original and noisier data sets have some overlap with each other, suggesting that the noise in the data affects the precision and accuracy of the coefficient estimates.
+The confidence intervals for beta0 and beta1 based on the less noisy data set are relatively narrower, indicating higher precision and more reliable estimates of the coefficients.
+So we can conclude that reducing the noise in the data leads to more precise coefficient estimates, as indicated by the narrower confidence intervals. This suggests that with less noise, we have more confidence in the estimated values of beta0 and beta1.
+
+
+    ```{r}
+confint(lm_model)
+confint(lm_model_clear)
+confint(lm_model_noisy)
+```
+
+```{r}
+# simulated regression task
+```
+    
+## Classification
+
+1. When the number of features $p$ is large, there tends to be a deterioration in the perforance of KNN and other *local* approaches that perform prediction using only observations that are *near* the test observation for which a prediction must be made. This phenomenon is known as the *curse of dimensionality*, and it ties into the fact that non-parametric approaches often perform poorly when $p$ is large. We will now investigate this curse.
+
+    (a) Suppose that we have a set of observations, each with measurements on $p = 1$ feature, $X$. We assume that $X$ is uniformly (evenly) distributed on $[0,1]$. Associated with each observation is a response value. Suppose that we wish to predict a test observation's response using only observations that are within $10\%$ of the range of $X$ closest to that test observation. For instance, in order to predict the response for a test observation with $X = 0.6$ we will use observations in the range $[0.55, 0.65]$. On average, what fraction of the available observations will we use to make this prediction? 9.75%
+    
+    
+When x is in range of [0.05,0.95] samples are in: [x−0.05,x+0.05] thus they have (x+0.05)-(x-0.05) = 0.1 or 10% length.
+
+But when x<0.05 observations are in : [0,x+0.05] which has x+0.05-0 or (100x+5) % length.
+
+when x>0.95 the length is (105−100x)%
+And considering the whole [0,1] interval and integrating over all three sub intervals:
+
+Int(10) over [0.05,0.95] + Int(100x+5) over [0,0.05] + Int(105-100x) over [0.95,1] = 9.75
+
+And the final answer is 9.75%
+.
+    
+    (b) Now suppose that we have a set of observations, each with measurements on $p = 2$ features, $X_1$ and $X_2$. We assume $(X_1, X_2)$ are uniformly distributed on $[0,1]\times[0,1]$. we wish to predict a test observation's response using only observations that are within $10\%$ of the range of $X_1$ *and* within $10\%$ of the range of $X_2$ closest to that test observation. For instance, in order to predict the response for a test observation with $X_1 = 0.6$ and $X_2 = 0.35$ we will use observations in the range $[0.55, 0.65]$ for $X_1$ and in the range $[0.3, 0.4]$ for $X_2$. On average, what fraction of the available observations will we use to make this prediction?
+    
+    Assuming these two features are independent, p = 0.0975 * 0.0975 = 0.00950625
+    so the fraction of the available observations is 0.950625 %
+    
+    (c) Now suppose that we have a set of observations, each with measurements on $p = 100$ features. Again, the observations are uniformly distributed on each feature, and again each feature ranges from $0$ to $1$. we wish to predict a test observation's response using only observations that are within $10\%$ of each feature's range that is closest to that test observation. What fraction of the available observations will we use to make this prediction?
+    
+    Assuming the independence of the 100 observations from each other the fraction of the available observations is: (0.0975)^100 = 7.95 * (10)^(-102) which is approximately equal to ZERO.
+    So, the final answer is about 0%
+    
+    (d) Using your answers to (a)--(c), argue that a drawback of KNN when $p$ is large is that there are very few training observations *near* any given test observation.
+    
+    Since when we have p number of features, the fraction of available observations we will use to make the prediction is (0.0975)^p , one drawback of KNN is that when p is too large, there are very few observations near any given test observation.
+    Note that as p goes to infinity,(0.0975)^p approaches to zero as we saw in part (c)
+
+    
+    (e) Now suppose that we wish to make a prediction for a test observation by creating a $p$-dimensional hypercube centered around the test observation that contains, on average, $10\%$ of the training observations. For $p = 1, 2,$ and $100$, what is the length of each side of the hypercube? Comment on your answer.
+    
+        [Hint: A hypercube is a generalization of a cube to an arbitrary number of dimensions. When $p = 1$, a hypercube is simple a line segment. When $p = 2$ it is a square, and when $p = 100$ it is a $100$-dimensional cube.]
+        
+        Generally for any number p length of each side will be (0.1)^(1/p)
+        So
+        when p=1 : length of each side of the hypercube = 0.1
+        when p=2 : length of each side of the hypercube = 0.1^(1/2) 
+        when p=100 : length of each side of the hypercube = 0.1^(1/100)
+           
+2. Suppose we collect data for a group of students in a statistics class with variables $X_1 =$ hours studied, $X_2 =$ undergrad GPA, and $Y =$ receive an A. We fit a logistic regression and produce estimated coefficients, $\hat{\beta}_0 = -6, \hat{\beta}_1 = 0.05, \hat{beta}_2 = 1$.
+
+    (a) Estimate the probability that a student who studies for $40$h and has an undergrad GPA of $3.5$ gets an A in the class.
+    
+    inserting the given values into the logistic regression formula we have:
+    p = (exp(-6+0.05*X1+X2))(1+exp(-6+0.05*X1+X2) = 0.3775
+    
+    (b) How many hours would the student in part (a) need to study to have a $50\%$ chance of getting an A in the class?
+    
+    p = (exp(-6+0.05*X1+3.5))(1+exp(-6+0.05*X1+3.5) = 0.5
+    resulting in X1 = 50
+    so final answer is 50 hours.
+    
+3. This question should be answered using the `Weekly` data set, which is part of the `ISLR` package. This data contains weekly percentage returns for the S&P 500 stock index between 1990 and 2010.
+
+
+
+    (a) Produce some numerical and graphical summaries of the `Weekly` data. Do there appear to be any patterns?
+  
+    After running the codes,the correlations between the lag variables and today’s returns are close to zero. The only substantial correlation is between Year and Volume and when we plot             Volume we see that it is increasing over time.Also pair-wise plots shows that there aren’t any clear relationships between any two variable except for Year and Volume and maybe even            Today and Direction. The plots suggest and as time goes on Volume will increase, and that if a market was up on a given week then the percentage return for that week (Today) will             tend to be higher.
+      And also correlation table confirms that there is strong relationship between Year and Volume (correlation coefficient of ~0.84).
+    
+    ```{r}
+    library(ISLR)
+    library(knitr)
+    summary(Weekly)
+    cor(Weekly[, -9])
+    attach(Weekly)
+    plot(Volume)
+    pairs(Weekly)
+    corr_table <- kable(cor(Weekly[,-9]))
+    corr_table
+```
+    
+    (b) Use the full data set to perform a logistic regression with `Direction` as the response and the five lag variables plus `Volume` as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+    
+    Yes, Lag2 is the statistically significant predictor since its p-value is 0.0296 which is less than 5%.
+    
+    ```{r}
+ fit.glm <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = binomial)
+summary(fit.glm)
+```
+    
+    (c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+    
+    
+    correct predictions rate is = (54+557)/1089 = 0.561065 = 56.1065 %
+     and so the training error rate is 1 - 0.561065 = 0.438935 or 43.8935 %
+     so the model is very accurate and when the market goes up the model has the accuracy of (557/(48+557) = 0.9206612 = 92.06612 %  
+    the percentage of correct predictions on the training data is (54+557)/1089
+    and when the market goes down the model's accuracy is 11.1570248% of the time (54/(54+430) = 0.111570248 = 11.1570248 %
+    
+    ```{r}
+    
+    confm <- predict(fit.glm, type = "response")
+    pred.glm <- rep("Down", length(confm))
+    pred.glm[confm > 0.5] <- "Up"
+    table(pred.glm, Direction)
+```
+    
+    (d) Now fit the logistic regression model using a traning data period from 1990 to 2009 with `Lag2` as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is the data from 2010).
+    
+    
+    We can see that the percentage of correct predictions on the test data is (3+32)/52 = 0.6730769 = 67.30769 %
+    and so 1-0.6730769 =0.3269231= 32.69231% is the test error rate.
+    Note that when the market is up the model's accuracy is (32/(32+0) = 100 % which is impressive!
+    and when when the market goes down the model's accuracy drops down to 3/(3+17) = 0.15 = 15%
+    So this model is only accuaret when the market is up.
+    
+    ```{r}
+  
+    train <- Weekly[Weekly$Year < 2010, ]
+    test <- Weekly[!(Weekly$Year < 2010), ]
+
+    glm.fit.train <- glm(Direction ~ Lag2, data = train, family = binomial)
+    glm.probs.test <- predict(glm.fit.train, newdata = test, type = "response")
+    glm.pred.test <- ifelse(glm.probs.test > 0.5, "Up", "Down")
+
+    table(glm.pred.test, test$Direction)
+    
+ 
+```
+    
+    
+    
+    
+    (e) Repeat (d) using LDA.
+    We can see that LDA model's accuracy rate is (7+57)/104= 0.6153846154
+
+    ```{r}
+    library(MASS)
+    train_10 <- (Year< 2010)
+    Weekly.test <- Weekly[!train_10,]
+    train_10 <- (Year< 2010)
+    lda_mdl10 <- lda(Direction~Lag2, data = Weekly, subset = train_10)
+    lda_10_prob <- predict(lda_mdl10, Weekly.test)
+    lda_10_class <- lda_10_prob$class
+    table(lda_10_class, Weekly.test$Direction)
+    ```  
+    
+    (f) Repeat (d) using KNN with K = 1.
+    KNN model's accuarcy rate when k=1 is (8+17)/52 = 0.4807692308
+    
+    ```{r}
+    library(class)
+    train_10 <- (Year< 2010)
+    train.x_10 <- matrix(Lag2[train_10])
+    test.x_10 <- matrix(Lag2[!train_10])
+    train.direction_10 <- Direction[train_10]
+    Direction_10 = Direction[!train_10]
+    set.seed(1)
+    knn_pred_10 <- knn(train.x_10, test.x_10, train.direction_10, k=1)
+    table(knn_pred_10, Direction_10)
+```
+    
+    (h) Which of these methods appears to provide the best results on this data?
+    The logistic model is the most accurate with an accuracy rate of 67.30769 %
+    
+    (i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you can experiment with values for $K$ in the KNN classifier.
+    After trying different transformations for the different methods, the original Logistic regression and KNN with k=100 models had the best accuraccy rates.
+    
+    ```{r}
+    ## load the data
+    library(ISLR)
+    
+    ## take a look
+    head(Weekly)
+    
+    
+    #Logistic Regression with Interaction Lag2:Lag4
+    Weekly.fit<-glm(Direction~Lag2:Lag4+Lag2, data=Weekly,family=binomial, subset=train_10)
+    logWeekly.prob= predict(Weekly.fit, test, type = "response")
+    logWeekly.pred = rep("Down", length(logWeekly.prob))
+    logWeekly.pred[logWeekly.prob > 0.5] = "Up"
+    Direction_10 = Direction[!train_10]
+    table(logWeekly.pred, Direction_10)
+    
+    mean(logWeekly.pred == Direction_10)
+    
+
+    
+    #KNN with K=10
+    train.x_10 <- matrix(Lag2[train_10])
+    test.x_10 <- matrix(Lag2[!train_10])
+    train.direction_10 <- Direction[train_10]
+    Direction_10 = Direction[!train_10]
+    set.seed(1)
+    knn_pred_10 <- knn(train.x_10, test.x_10, train.direction_10, k=10)
+    table(knn_pred_10, Direction_10)
+    mean(knn_pred_10 == Direction_10)
+    
+    #KNN with k=100
+    
+    train.x_10 <- matrix(Lag2[train_10])
+    test.x_10 <- matrix(Lag2[!train_10])
+    train.direction_10 <- Direction[train_10]
+    Direction_10 = Direction[!train_10]
+    set.seed(1)
+    knn_pred_10 <- knn(train.x_10, test.x_10, train.direction_10, k=100)
+    table(knn_pred_10, Direction_10)
+    mean(knn_pred_10 == Direction_10)
+    
+    
+    ```
+    
+4. Using the `Boston` data set, fit classification models in order to predict whether a given suburb has a crime rate above or below the median. Explore logistic regression, LDA, and KNN models using various subsets of the predictors. Describe your findings.
+
+pair-wise correlation plots shows that variables nox, age, dis, medv may have some sort of correlation with our crime rate. Therefore these may make good predictors for our crim_lvl 
+So we will run a logistic regression model to identify which of our predictors are significant and then then evaluate how effective our model is at predicing if the crime rate will be above or below the median.
+In the final logistic model  nox and medv were the final predictors since the other predictors were omitted due to their high p value which indicated insignificance for the model.
+The inal Logistic model states that as the nox variable increases (nitrogen oxides concentration) our predicted probability of above-median-crime-rate for that neighborhood increases too.
+The model also states that as the median value of owner-occupied homes increases then the predicted probability for a high crime-rate also increases.
+Error rate of final Logistic model with a threshold of 50% : 19.2%.
+
+Next step: LDA analysis 
+In the LDA model, the nox, age, and medv variables have a positive correlation with the probability of a high crime rate (above median) while the dis variable has a negative correlation with the predicted probablity. In the LDA model, the error rate is a bit lower than the Error rate of the logistic model with the rate at 18.5%.((14 + 13)/146)
+
+Final step: KNN model
+For the KNN model with k=3 we can see that the error rate is(4+5)/146 = 0.06164384
+for the KNN with k=5 , the error rate is (5 + 6)/146 = 0.07534247
+
+So KNN is better than both the Logistic Regression and LDA models in this criteria.From the two KNNs ,the best model is the KNN model with a k of 3. Although KNN doesn’t tell us which predictors are important, it tells us if we want to lower the crime rate, we should look at what low-crime communities are doing and based on our variables, we should look at that low-crime communities are doing in terms of air pollution, tax rates/tax structures and school funding.
+
+    ```{r}
+    ## load the data
+library(MASS)
+
+    
+attach(Boston)
+median_crime = median(crim)
+#We will create crim_lvl variable that takes on two values: "0" or "1".
+#"0" if crime rate below median and "1" if above median.
+crim_lvl <- rep(0, 506)
+crim_lvl[crim > median_crime] = 1
+crim_lvl <- as.factor(crim_lvl)
+Boston_2 <- data.frame(Boston, crim_lvl)
+detach(Boston)
+
+pairs(Boston_2)
+
+set.seed(1)
+train_13 <- rbinom(506, 1, 0.7)
+Boston_2 <- cbind(Boston_2, train_13)
+Boston.train <- Boston_2[train_13 == 1,]
+Boston.test <- Boston_2[train_13 == 0,]
+
+#fitting a logistic model.
+attach(Boston.train)
+log_reg <- glm(crim_lvl~nox + age + dis + medv, data = Boston.train, family = binomial)
+summary(log_reg)
+
+#From the p values of coefficients of the previous logistic model age is not a significant predictor, so we will remove it from the model. 
+log_reg <- glm(crim_lvl~nox + dis + medv, data = Boston.train, family = binomial)
+summary(log_reg)
+
+#now dis has become non significant too
+
+#dis has now become another un-significant predictor after the removal of age. So we will remove it until only significant predictors are left.
+log_reg <- glm(crim_lvl~nox  + medv, data = Boston.train, family = binomial)
+summary(log_reg)
+
+#Now we have our final set of predictors.
+detach(Boston.train)
+
+prob_reg <- predict(log_reg, Boston.test, type = 'response')
+pred_reg <- rep(0, 146)
+pred_reg[prob_reg > 0.5] = 1
+
+ftable <- matrix(data=table(pred_reg, Boston.test$crim_lvl), nrow=2, ncol=2, 
+              dimnames=list(c("Below median", "Above median"), c("Below", "Above")))
+names(dimnames(ftable)) <- c("predicted", "observed")
+print(ftable)
+
+
+#LDA analysis
+lda_mdl <- lda(crim_lvl~nox + age+ dis+medv, data = Boston_2, subset= (train_13==1))
+lda_mdl
+
+lda_preds <- predict(lda_mdl, Boston.test)
+lda_class <- lda_preds$class
+
+dat <- matrix(data=table(lda_class, Boston.test$crim_lvl), nrow=2, ncol=2, 
+              dimnames=list(c("Below median", "Above median"), c("Below", "Above")))
+names(dimnames(dat)) <- c("predicted", "observed")
+print(dat)
+
+#KNN model
+#k=3
+train.x_13 <- cbind(Boston.train$nox, Boston.train$tax, Boston.train$pratio)
+test.x_13 <- cbind(Boston.test$nox, Boston.test$tax, Boston.test$pratio)
+set.seed(1)
+knn_pred_13 <- knn(train.x_13, test.x_13, Boston.train$crim_lvl, k=3)
+table(knn_pred_13, Boston.test$crim_lvl)
+
+#KNN with k=5
+
+knn_pred_13_2 <- knn(train.x_13, test.x_13, Boston.train$crim_lvl, k=5)
+table(knn_pred_13_2, Boston.test$crim_lvl)
+
+    ```
+    
+
